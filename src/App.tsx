@@ -1,10 +1,34 @@
+import { useMemo, useState } from "react";
 import { EntryForm } from "./components/EntryForm";
 import { EntryTable } from "./components/EntryTable";
 import { useTimeEntries } from "./hooks/useTimeEntries";
+import type { EntryInput } from "./hooks/useTimeEntries";
+import type { TimeEntry } from "./types";
 
 function App() {
-  const { clients, entries, addEntry, removeEntry, clientNameById } =
+  const { clients, entries, addEntry, updateEntry, removeEntry, clientNameById } =
     useTimeEntries();
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const editingEntry = useMemo(
+    () => entries.find((entry) => entry.id === editingId) ?? null,
+    [entries, editingId],
+  );
+
+  function handleEdit(entry: TimeEntry) {
+    setEditingId(entry.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleUpdate(id: string, input: EntryInput) {
+    updateEntry(id, input);
+    setEditingId(null);
+  }
+
+  function handleDelete(id: string) {
+    if (id === editingId) setEditingId(null);
+    removeEntry(id);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -20,7 +44,13 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">
-        <EntryForm clients={clients} onAdd={addEntry} />
+        <EntryForm
+          clients={clients}
+          editingEntry={editingEntry}
+          onAdd={addEntry}
+          onUpdate={handleUpdate}
+          onCancelEdit={() => setEditingId(null)}
+        />
 
         <section className="space-y-3">
           <h2 className="text-base font-semibold text-slate-900">
@@ -29,7 +59,9 @@ function App() {
           <EntryTable
             entries={entries}
             clientNameById={clientNameById}
-            onDelete={removeEntry}
+            editingId={editingId}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         </section>
       </main>

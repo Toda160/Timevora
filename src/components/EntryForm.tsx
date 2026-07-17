@@ -1,11 +1,15 @@
-import { useState, type FormEvent } from "react";
-import type { Client } from "../types";
+import { useEffect, useState, type FormEvent } from "react";
+import type { Client, TimeEntry } from "../types";
 import type { EntryInput } from "../hooks/useTimeEntries";
 import { todayIso } from "../lib/format";
 
 interface EntryFormProps {
   clients: Client[];
+  /** When set, the form is in edit mode for this entry. */
+  editingEntry: TimeEntry | null;
   onAdd: (input: EntryInput) => void;
+  onUpdate: (id: string, input: EntryInput) => void;
+  onCancelEdit: () => void;
 }
 
 interface FormErrors {
@@ -23,13 +27,37 @@ function emptyDraft(clients: Client[]): EntryInput {
   };
 }
 
+function draftFromEntry(entry: TimeEntry): EntryInput {
+  return {
+    date: entry.date,
+    clientId: entry.clientId,
+    description: entry.description,
+    durationHours: entry.durationHours,
+    billable: entry.billable,
+  };
+}
+
 const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
-export function EntryForm({ clients, onAdd }: EntryFormProps) {
+export function EntryForm({
+  clients,
+  editingEntry,
+  onAdd,
+  onUpdate,
+  onCancelEdit,
+}: EntryFormProps) {
+  const isEditing = editingEntry !== null;
   const [draft, setDraft] = useState<EntryInput>(() => emptyDraft(clients));
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Load the selected entry into the form when entering edit mode, and reset
+  // back to a blank draft when leaving it.
+  useEffect(() => {
+    setErrors({});
+    setDraft(editingEntry ? draftFromEntry(editingEntry) : emptyDraft(clients));
+  }, [editingEntry, clients]);
 
   function validate(value: EntryInput): FormErrors {
     const next: FormErrors = {};
@@ -45,16 +73,25 @@ export function EntryForm({ clients, onAdd }: EntryFormProps) {
     setErrors(validation);
     if (Object.keys(validation).length > 0) return;
 
-    onAdd({ ...draft, description: draft.description.trim() });
-    setDraft(emptyDraft(clients));
+    const clean = { ...draft, description: draft.description.trim() };
+    if (isEditing && editingEntry) {
+      onUpdate(editingEntry.id, clean);
+    } else {
+      onAdd(clean);
+      setDraft(emptyDraft(clients));
+    }
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className={`rounded-2xl border bg-white p-5 shadow-sm transition ${
+        isEditing ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200"
+      }`}
     >
-      <h2 className="mb-4 text-base font-semibold text-slate-900">Log time</h2>
+      <h2 className="mb-4 text-base font-semibold text-slate-900">
+        {isEditing ? "Edit time entry" : "Log time"}
+      </h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -142,12 +179,21 @@ export function EntryForm({ clients, onAdd }: EntryFormProps) {
         </div>
       </div>
 
-      <div className="mt-5 flex justify-end">
+      <div className="mt-5 flex justify-end gap-2">
+        {isEditing && (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
         >
-          Add entry
+          {isEditing ? "Update entry" : "Add entry"}
         </button>
       </div>
     </form>

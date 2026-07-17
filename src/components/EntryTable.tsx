@@ -5,6 +5,8 @@ import { formatDate, formatHours } from "../lib/format";
 interface EntryTableProps {
   entries: TimeEntry[];
   clientNameById: Map<string, string>;
+  editingId: string | null;
+  onEdit: (entry: TimeEntry) => void;
   onDelete: (id: string) => void;
 }
 
@@ -47,7 +49,13 @@ function EmptyState() {
   );
 }
 
-export function EntryTable({ entries, clientNameById, onDelete }: EntryTableProps) {
+export function EntryTable({
+  entries,
+  clientNameById,
+  editingId,
+  onEdit,
+  onDelete,
+}: EntryTableProps) {
   const sorted = useMemo(
     () =>
       [...entries].sort((a, b) => {
@@ -86,7 +94,14 @@ export function EntryTable({ entries, clientNameById, onDelete }: EntryTableProp
           </thead>
           <tbody className="divide-y divide-slate-100">
             {sorted.map((entry) => (
-              <tr key={entry.id} className="transition hover:bg-slate-50/70">
+              <tr
+                key={entry.id}
+                className={`transition ${
+                  editingId === entry.id
+                    ? "bg-blue-50/70"
+                    : "hover:bg-slate-50/70"
+                }`}
+              >
                 <td className="whitespace-nowrap px-5 py-3.5 text-slate-600">
                   {formatDate(entry.date)}
                 </td>
@@ -105,14 +120,24 @@ export function EntryTable({ entries, clientNameById, onDelete }: EntryTableProp
                   <BillableBadge billable={entry.billable} />
                 </td>
                 <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onDelete(entry.id)}
-                    className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                    aria-label="Delete entry"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(entry)}
+                      className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                      aria-label="Edit entry"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(entry.id)}
+                      className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                      aria-label="Delete entry"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
