@@ -1,0 +1,125 @@
+import { useMemo } from "react";
+import type { TimeEntry } from "../types";
+import { formatDate, formatHours } from "../lib/format";
+
+interface EntryTableProps {
+  entries: TimeEntry[];
+  clientNameById: Map<string, string>;
+  onDelete: (id: string) => void;
+}
+
+function BillableBadge({ billable }: { billable: boolean }) {
+  return billable ? (
+    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+      Billable
+    </span>
+  ) : (
+    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/20">
+      Non-billable
+    </span>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="h-6 w-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+          />
+        </svg>
+      </div>
+      <p className="text-sm font-medium text-slate-900">No time entries yet</p>
+      <p className="mt-1 text-sm text-slate-500">
+        Log your first entry using the form above.
+      </p>
+    </div>
+  );
+}
+
+export function EntryTable({ entries, clientNameById, onDelete }: EntryTableProps) {
+  const sorted = useMemo(
+    () =>
+      [...entries].sort((a, b) => {
+        // Newest day first; tie-break on creation time so same-day order is stable.
+        if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+        return a.createdAt < b.createdAt ? 1 : -1;
+      }),
+    [entries],
+  );
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Date
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Client
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Description
+              </th>
+              <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Duration
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Status
+              </th>
+              <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {sorted.map((entry) => (
+              <tr key={entry.id} className="transition hover:bg-slate-50/70">
+                <td className="whitespace-nowrap px-5 py-3.5 text-slate-600">
+                  {formatDate(entry.date)}
+                </td>
+                <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
+                  {clientNameById.get(entry.clientId) ?? "Unknown client"}
+                </td>
+                <td className="px-5 py-3.5 text-slate-600">
+                  {entry.description || (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
+                <td className="whitespace-nowrap px-5 py-3.5 text-right font-medium tabular-nums text-slate-900">
+                  {formatHours(entry.durationHours)}
+                </td>
+                <td className="whitespace-nowrap px-5 py-3.5">
+                  <BillableBadge billable={entry.billable} />
+                </td>
+                <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                  <button
+                    type="button"
+                    onClick={() => onDelete(entry.id)}
+                    className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                    aria-label="Delete entry"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {sorted.length === 0 && <EmptyState />}
+    </div>
+  );
+}
