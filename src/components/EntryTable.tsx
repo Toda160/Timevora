@@ -54,6 +54,41 @@ function EmptyState({ isFiltered }: { isFiltered: boolean }) {
   );
 }
 
+function EntryActions({
+  entry,
+  onEdit,
+  onDelete,
+}: {
+  entry: TimeEntry;
+  onEdit: (entry: TimeEntry) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="flex gap-1">
+      <button
+        type="button"
+        onClick={() => onEdit(entry)}
+        className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+        aria-label="Edit entry"
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        onClick={() => onDelete(entry.id)}
+        className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+        aria-label="Delete entry"
+      >
+        Delete
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Mobile uses stacked cards (nothing wider than the viewport — this is what
+ * prevents the page from panning sideways on phones). Desktop keeps a table.
+ */
 export function EntryTable({
   entries,
   clientNameById,
@@ -65,92 +100,131 @@ export function EntryTable({
   const sorted = useMemo(
     () =>
       [...entries].sort((a, b) => {
-        // Newest day first; tie-break on creation time so same-day order is stable.
         if (a.date !== b.date) return a.date < b.date ? 1 : -1;
         return a.createdAt < b.createdAt ? 1 : -1;
       }),
     [entries],
   );
 
-  return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Date
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Client
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Description
-              </th>
-              <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Duration
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Status
-              </th>
-              <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {sorted.map((entry) => (
-              <tr
-                key={entry.id}
-                className={`transition ${
-                  editingId === entry.id
-                    ? "bg-blue-50/70"
-                    : "hover:bg-slate-50/70"
-                }`}
-              >
-                <td className="whitespace-nowrap px-5 py-3.5 text-slate-600">
-                  {formatDate(entry.date)}
-                </td>
-                <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
-                  {clientNameById.get(entry.clientId) ?? "Unknown client"}
-                </td>
-                <td className="px-5 py-3.5 text-slate-600">
-                  {entry.description || (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </td>
-                <td className="whitespace-nowrap px-5 py-3.5 text-right font-medium tabular-nums text-slate-900">
-                  {formatHours(entry.durationHours)}
-                </td>
-                <td className="whitespace-nowrap px-5 py-3.5">
-                  <BillableBadge billable={entry.billable} />
-                </td>
-                <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      type="button"
-                      onClick={() => onEdit(entry)}
-                      className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
-                      aria-label="Edit entry"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(entry.id)}
-                      className="rounded-md px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                      aria-label="Delete entry"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  if (sorted.length === 0) {
+    return (
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <EmptyState isFiltered={isFiltered} />
       </div>
-      {sorted.length === 0 && <EmptyState isFiltered={isFiltered} />}
-    </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Mobile: cards — never wider than the screen */}
+      <ul className="space-y-3 md:hidden">
+        {sorted.map((entry) => (
+          <li
+            key={entry.id}
+            className={`rounded-2xl border bg-white p-4 shadow-sm transition ${
+              editingId === entry.id
+                ? "border-blue-300 ring-2 ring-blue-100"
+                : "border-slate-200"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  {clientNameById.get(entry.clientId) ?? "Unknown client"}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {formatDate(entry.date)}
+                </p>
+              </div>
+              <p className="shrink-0 text-sm font-bold tabular-nums text-slate-900">
+                {formatHours(entry.durationHours)}
+              </p>
+            </div>
+            <p className="mt-2 break-words text-sm text-slate-600">
+              {entry.description || (
+                <span className="text-slate-400">No description</span>
+              )}
+            </p>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <BillableBadge billable={entry.billable} />
+              <EntryActions
+                entry={entry}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: classic table */}
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
+        <div className="w-full max-w-full min-w-0 overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Date
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Client
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Description
+                </th>
+                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Duration
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Status
+                </th>
+                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {sorted.map((entry) => (
+                <tr
+                  key={entry.id}
+                  className={`transition ${
+                    editingId === entry.id
+                      ? "bg-blue-50/70"
+                      : "hover:bg-slate-50/70"
+                  }`}
+                >
+                  <td className="whitespace-nowrap px-5 py-3.5 text-slate-600">
+                    {formatDate(entry.date)}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
+                    {clientNameById.get(entry.clientId) ?? "Unknown client"}
+                  </td>
+                  <td className="max-w-xs px-5 py-3.5 text-slate-600">
+                    {entry.description || (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3.5 text-right font-medium tabular-nums text-slate-900">
+                    {formatHours(entry.durationHours)}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3.5">
+                    <BillableBadge billable={entry.billable} />
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                    <div className="flex justify-end">
+                      <EntryActions
+                        entry={entry}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   );
 }

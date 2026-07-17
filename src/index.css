@@ -1,22 +1,17 @@
 @import "tailwindcss";
 
-/* Wide content (the entries table) can expand the mobile layout viewport and
-   let the whole page pan sideways. `overflow-x: clip` truly clips without
-   creating a touch-scrollable container (unlike `hidden`), so the page stays
-   put while the table keeps its own horizontal scroll via overflow-x-auto. */
-html,
-body {
-  overflow-x: hidden; /* fallback for browsers without `clip` */
-  overflow-x: clip;
-  max-width: 100%;
-}
-
 html {
   color-scheme: light;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
 }
 
 body {
   margin: 0;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
   background-color: #f8fafc;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -43,7 +43,7 @@ LexTime is a clean, fast, single-page app for logging and reviewing billable and
 
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/Toda160/Timevora
 cd lextime
 
 # 2. Install dependencies

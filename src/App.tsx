@@ -56,9 +56,9 @@ function App() {
   const isFiltered = hasActiveFilters(filters);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center gap-3 px-4 py-4 sm:px-6 sm:py-5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +75,7 @@ function App() {
               />
             </svg>
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
               Lex<span className="text-blue-600">Time</span>
             </h1>
@@ -86,7 +86,7 @@ function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full min-w-0 max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <StatsBar entries={filteredEntries} />
 
         <EntryForm
@@ -98,16 +98,16 @@ function App() {
           onCancelEdit={() => setEditingId(null)}
         />
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-slate-900">
+        <section className="min-w-0 space-y-3">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <h2 className="min-w-0 truncate text-base font-semibold text-slate-900">
               Logged time
             </h2>
             <button
               type="button"
               onClick={handleExportCsv}
               disabled={filteredEntries.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
