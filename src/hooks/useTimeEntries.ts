@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Client, TimeEntry } from "../types";
 import { createId, entryRepository } from "../lib/storage";
 import { seedIfEmpty } from "../lib/seed";
@@ -12,14 +12,11 @@ export type EntryInput = Omit<TimeEntry, "id" | "createdAt">;
  * mutation, so a page refresh always reflects the latest state.
  */
 export function useTimeEntries() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [entries, setEntries] = useState<TimeEntry[]>([]);
-
-  useEffect(() => {
-    const { clients: seededClients, entries: seededEntries } = seedIfEmpty();
-    setClients(seededClients);
-    setEntries(seededEntries);
-  }, []);
+  // Seed + load synchronously on first render so the UI is populated
+  // immediately (no empty-then-filled flash) and no effect is needed.
+  const [initial] = useState(seedIfEmpty);
+  const [clients] = useState<Client[]>(initial.clients);
+  const [entries, setEntries] = useState<TimeEntry[]>(initial.entries);
 
   const addEntry = useCallback((input: EntryInput) => {
     const entry: TimeEntry = {

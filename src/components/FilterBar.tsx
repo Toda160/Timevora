@@ -1,18 +1,10 @@
 import type { Client } from "../types";
-
-export type BillableFilter = "all" | "billable" | "non-billable";
-
-export interface Filters {
-  clientId: string;
-  billable: BillableFilter;
-  search: string;
-}
-
-export const emptyFilters: Filters = {
-  clientId: "",
-  billable: "all",
-  search: "",
-};
+import {
+  emptyFilters,
+  hasActiveFilters,
+  type BillableFilter,
+  type Filters,
+} from "../lib/filters";
 
 interface FilterBarProps {
   clients: Client[];
@@ -26,10 +18,7 @@ const controlClass =
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
 export function FilterBar({ clients, filters, onChange, resultCount }: FilterBarProps) {
-  const isFiltered =
-    filters.clientId !== "" ||
-    filters.billable !== "all" ||
-    filters.search.trim() !== "";
+  const isFiltered = hasActiveFilters(filters);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

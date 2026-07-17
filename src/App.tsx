@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { EntryForm } from "./components/EntryForm";
 import { EntryTable } from "./components/EntryTable";
-import { FilterBar, emptyFilters, type Filters } from "./components/FilterBar";
+import { FilterBar } from "./components/FilterBar";
 import { StatsBar } from "./components/StatsBar";
 import { useTimeEntries } from "./hooks/useTimeEntries";
 import type { EntryInput } from "./hooks/useTimeEntries";
 import type { TimeEntry } from "./types";
 import { downloadCsv, entriesToCsv } from "./lib/csv";
 import { todayIso } from "./lib/format";
+import { emptyFilters, hasActiveFilters, type Filters } from "./lib/filters";
 
 function App() {
   const { clients, entries, addEntry, updateEntry, removeEntry, clientNameById } =
@@ -52,28 +53,44 @@ function App() {
     downloadCsv(`lextime-entries-${todayIso()}.csv`, csv);
   }
 
-  const isFiltered =
-    filters.clientId !== "" ||
-    filters.billable !== "all" ||
-    filters.search.trim() !== "";
+  const isFiltered = hasActiveFilters(filters);
 
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-5">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">
-            Lex<span className="text-blue-600">Time</span>
-          </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            Time tracking for law firms — by day, client, and billability.
-          </p>
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6 sm:py-5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="h-5 w-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+              />
+            </svg>
+          </span>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+              Lex<span className="text-blue-600">Time</span>
+            </h1>
+            <p className="text-xs text-slate-500 sm:text-sm">
+              Time tracking for law firms — by day, client, and billability.
+            </p>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">
+      <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <StatsBar entries={filteredEntries} />
 
         <EntryForm
+          key={editingEntry?.id ?? "new"}
           clients={clients}
           editingEntry={editingEntry}
           onAdd={addEntry}

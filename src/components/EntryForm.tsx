@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { Client, TimeEntry } from "../types";
 import type { EntryInput } from "../hooks/useTimeEntries";
 import { todayIso } from "../lib/format";
@@ -49,15 +49,12 @@ export function EntryForm({
   onCancelEdit,
 }: EntryFormProps) {
   const isEditing = editingEntry !== null;
-  const [draft, setDraft] = useState<EntryInput>(() => emptyDraft(clients));
+  // The parent remounts this form (via `key`) when the edit target changes,
+  // so initializing state from props here is enough — no effect required.
+  const [draft, setDraft] = useState<EntryInput>(() =>
+    editingEntry ? draftFromEntry(editingEntry) : emptyDraft(clients),
+  );
   const [errors, setErrors] = useState<FormErrors>({});
-
-  // Load the selected entry into the form when entering edit mode, and reset
-  // back to a blank draft when leaving it.
-  useEffect(() => {
-    setErrors({});
-    setDraft(editingEntry ? draftFromEntry(editingEntry) : emptyDraft(clients));
-  }, [editingEntry, clients]);
 
   function validate(value: EntryInput): FormErrors {
     const next: FormErrors = {};
