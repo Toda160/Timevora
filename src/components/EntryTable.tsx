@@ -6,6 +6,7 @@ interface EntryTableProps {
   entries: TimeEntry[];
   clientNameById: Map<string, string>;
   editingId: string | null;
+  isFiltered: boolean;
   onEdit: (entry: TimeEntry) => void;
   onDelete: (id: string) => void;
 }
@@ -22,7 +23,7 @@ function BillableBadge({ billable }: { billable: boolean }) {
   );
 }
 
-function EmptyState() {
+function EmptyState({ isFiltered }: { isFiltered: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
@@ -41,9 +42,13 @@ function EmptyState() {
           />
         </svg>
       </div>
-      <p className="text-sm font-medium text-slate-900">No time entries yet</p>
+      <p className="text-sm font-medium text-slate-900">
+        {isFiltered ? "No matching entries" : "No time entries yet"}
+      </p>
       <p className="mt-1 text-sm text-slate-500">
-        Log your first entry using the form above.
+        {isFiltered
+          ? "Try adjusting or clearing your filters."
+          : "Log your first entry using the form above."}
       </p>
     </div>
   );
@@ -53,6 +58,7 @@ export function EntryTable({
   entries,
   clientNameById,
   editingId,
+  isFiltered,
   onEdit,
   onDelete,
 }: EntryTableProps) {
@@ -144,7 +150,7 @@ export function EntryTable({
           </tbody>
         </table>
       </div>
-      {sorted.length === 0 && <EmptyState />}
+      {sorted.length === 0 && <EmptyState isFiltered={isFiltered} />}
     </div>
   );
 }
